@@ -165,20 +165,22 @@ export const SalaryInputForm: React.FC<SalaryInputFormProps> = ({
             placeholder="es. 35.000"
             className="block w-full rounded-xl border border-neutral-200 bg-neutral-50/50 py-3.5 pl-12 pr-16 text-2xl sm:text-3xl font-extrabold text-neutral-900 placeholder-neutral-400 focus:border-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 transition-all"
           />
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-bold text-neutral-400 uppercase">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-bold text-neutral-500 uppercase">
             EUR / anno
           </div>
         </div>
 
         {/* Slider Compatto Sotto l'Input */}
         <div className="pt-2 space-y-1.5">
-          <div className="flex justify-between items-center text-[11px] font-semibold text-neutral-400">
+          <div className="flex justify-between items-center text-[11px] font-semibold text-neutral-500">
             <span>{formatCurrency(MIN_SLIDER_RAL, false)}</span>
             <span className="text-neutral-900 font-bold">{formatCurrency(ral, false)}</span>
             <span>{formatCurrency(MAX_SLIDER_RAL, false)}+</span>
           </div>
           <input
+            id="ral-slider"
             type="range"
+            aria-label="Seleziona la Retribuzione Annua Lorda (RAL) tramite cursore"
             min={MIN_SLIDER_RAL}
             max={MAX_SLIDER_RAL}
             step={SLIDER_STEP}

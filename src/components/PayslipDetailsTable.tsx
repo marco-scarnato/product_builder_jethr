@@ -158,7 +158,7 @@ export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
               Dettaglio Voci Busta Paga
             </h2>
           </div>
-          <span className="text-xs font-semibold text-neutral-400">
+          <span className="text-xs font-semibold text-neutral-500">
             {monthlyCount} Mensilità
           </span>
         </div>
@@ -167,7 +167,7 @@ export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
         <div className="-mx-5 sm:mx-0 overflow-x-auto">
           <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[480px] sm:min-w-full">
             <thead>
-              <tr className="border-b border-neutral-200 text-[11px] font-bold uppercase tracking-wider text-neutral-400 bg-neutral-50/50">
+              <tr className="border-b border-neutral-200 text-[11px] font-bold uppercase tracking-wider text-neutral-600 bg-neutral-50/50">
                 <th className="py-2.5 px-4">Voce</th>
                 <th className="py-2.5 px-3 text-right">Importo Annuo</th>
                 <th className="py-2.5 px-4 text-right">Importo Mensile</th>
@@ -210,7 +210,7 @@ export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenInfo(row.explanationKey)}
-                            className="inline-flex items-center justify-center text-neutral-400 hover:text-neutral-900 p-0.5 rounded transition-colors"
+                            className="inline-flex items-center justify-center text-neutral-500 hover:text-neutral-900 p-0.5 rounded transition-colors"
                             title={`Dettagli e normativa: ${row.label}`}
                             aria-label={`Dettagli su ${row.label}`}
                           >
@@ -226,7 +226,7 @@ export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
                         className={cn(
                           isFinal && 'text-base font-black text-emerald-800',
                           isDeduction && 'text-rose-600 font-semibold',
-                          isCredit && 'text-emerald-600 font-semibold',
+                          isCredit && 'text-emerald-700 font-semibold',
                           isSubtotal && 'text-neutral-600',
                           !isFinal && !isDeduction && !isCredit && !isSubtotal && 'font-bold text-neutral-900'
                         )}
@@ -241,7 +241,7 @@ export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
                         className={cn(
                           isFinal && 'text-base font-black text-emerald-800',
                           isDeduction && 'text-rose-600 font-semibold',
-                          isCredit && 'text-emerald-600 font-semibold',
+                          isCredit && 'text-emerald-700 font-semibold',
                           isSubtotal && 'text-neutral-600',
                           !isFinal && !isDeduction && !isCredit && !isSubtotal && 'font-bold text-neutral-900'
                         )}

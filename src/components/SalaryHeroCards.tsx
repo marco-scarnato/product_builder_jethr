@@ -40,7 +40,7 @@ export const SalaryHeroCards: React.FC<SalaryHeroCardsProps> = ({
             <span className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">
               {formatCurrency(netMonthly)}
             </span>
-            <span className="text-sm font-semibold text-emerald-600">/ mese</span>
+            <span className="text-sm font-semibold text-emerald-700">/ mese</span>
           </div>
 
           <p className="mt-1.5 text-xs text-emerald-800/90 font-medium">
@@ -67,7 +67,7 @@ export const SalaryHeroCards: React.FC<SalaryHeroCardsProps> = ({
             <span className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight">
               {formatCurrency(monthlyTaxes)}
             </span>
-            <span className="text-sm font-semibold text-rose-500">/ mese</span>
+            <span className="text-sm font-semibold text-rose-700">/ mese</span>
           </div>
 
           <p className="mt-1.5 text-xs text-rose-800/90 font-medium">
