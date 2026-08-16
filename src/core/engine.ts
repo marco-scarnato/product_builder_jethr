@@ -108,10 +108,10 @@ export function calculateGrossIrpef(taxableIncome: number): CalculationStepDetai
 
 /**
  * 4. Calcolo Detrazioni da Lavoro Dipendente (Art. 13 TUIR):
- * - Imponibile <= 15.000 €: 1.955 €
- * - 15.001 € - 28.000 €: 1.910 € + 1.190 € * ((28.000 - Imponibile) / 13.000)
- * - 28.001 € - 50.000 €: 1.910 € * ((50.000 - Imponibile) / 22.000)
- * - > 50.000 €: 0 €
+ * - Imponibile <= 15.000 €: 1.955 € (importo massimo intero)
+ * - 15.001 € - 28.000 €: 1.910 € + 1.190 € × ((28.000 - Imponibile) / 13.000)
+ * - 28.001 € - 50.000 €: 1.910 € × ((50.000 - Imponibile) / 22.000)
+ * - > 50.000 €: 0 € (la detrazione si azzera)
  */
 export function calculateEmployeeDeductions(taxableIncome: number): CalculationStepDetail {
   const taxable = Math.max(0, taxableIncome || 0);
@@ -119,8 +119,8 @@ export function calculateEmployeeDeductions(taxableIncome: number): CalculationS
   if (taxable <= 0) {
     return {
       valore: 0,
-      formulaApplicata: '0 € su imponibile nullo o negativo',
-      passaggiCalcolo: 'Imponibile 0,00 € ➔ Detrazione: 0,00 €',
+      formulaApplicata: '0,00 € su imponibile nullo o negativo',
+      passaggiCalcolo: 'Imponibile 0,00 € ➔ Nessuna detrazione applicabile',
       fonteNormativa: EMPLOYEE_DEDUCTIONS.FONTE_NORMATIVA,
     };
   }
@@ -129,33 +129,40 @@ export function calculateEmployeeDeductions(taxableIncome: number): CalculationS
     const valore = EMPLOYEE_DEDUCTIONS.TIER_1_AMOUNT;
     return {
       valore,
-      formulaApplicata: 'Detrazione fissa intera 1.955 € per redditi fino a 15.000 €',
-      passaggiCalcolo: `Imponibile ${formatCurrency(taxable)} ≤ 15.000,00 € ➔ Detrazione spettante: 1.955,00 €`,
+      formulaApplicata: 'Fascia fino a 15.000 €: Detrazione massima fissa di 1.955 €',
+      passaggiCalcolo: `Imponibile fiscale (${formatCurrency(taxable)}) ≤ 15.000,00 €\n➔ Spetta la detrazione massima garantita per l'intero anno: 1.955,00 €`,
       fonteNormativa: EMPLOYEE_DEDUCTIONS.FONTE_NORMATIVA,
     };
   }
 
   if (taxable <= EMPLOYEE_DEDUCTIONS.TIER_2_LIMIT) {
-    const quota = (EMPLOYEE_DEDUCTIONS.TIER_2_LIMIT - taxable) / EMPLOYEE_DEDUCTIONS.TIER_2_DIVISOR;
-    const extra = EMPLOYEE_DEDUCTIONS.TIER_2_EXTRA * quota;
+    const delta = EMPLOYEE_DEDUCTIONS.TIER_2_LIMIT - taxable;
+    const coefficiente = delta / EMPLOYEE_DEDUCTIONS.TIER_2_DIVISOR;
+    const extra = roundToTwoDecimals(EMPLOYEE_DEDUCTIONS.TIER_2_EXTRA * coefficiente);
     const valore = roundToTwoDecimals(EMPLOYEE_DEDUCTIONS.TIER_2_BASE + extra);
 
     return {
       valore,
-      formulaApplicata: '1.910 € + 1.190 € × ((28.000 - Imponibile) / 13.000)',
-      passaggiCalcolo: `1.910,00 € + 1.190,00 € × ((28.000,00 € - ${formatCurrency(taxable)}) / 13.000) = 1.910,00 € + ${formatCurrency(extra)} = ${formatCurrency(valore)}`,
+      formulaApplicata: '1.910 € + [ 1.190 € × (28.000 € - Imponibile) / 13.000 ]',
+      passaggiCalcolo: `1) Quota residua dallo scaglione: 28.000,00 € - ${formatCurrency(taxable)} = ${formatCurrency(delta)}
+2) Rapporto di degressività: ${formatCurrency(delta)} / 13.000 = ${coefficiente.toFixed(4)}
+3) Quota variabile aggiuntiva: 1.190,00 € × ${coefficiente.toFixed(4)} = ${formatCurrency(extra)}
+4) Detrazione totale spettante: 1.910,00 € (base) + ${formatCurrency(extra)} = ${formatCurrency(valore)}`,
       fonteNormativa: EMPLOYEE_DEDUCTIONS.FONTE_NORMATIVA,
     };
   }
 
   if (taxable <= EMPLOYEE_DEDUCTIONS.TIER_3_LIMIT) {
-    const quota = (EMPLOYEE_DEDUCTIONS.TIER_3_LIMIT - taxable) / EMPLOYEE_DEDUCTIONS.TIER_3_DIVISOR;
-    const valore = roundToTwoDecimals(EMPLOYEE_DEDUCTIONS.TIER_3_BASE * quota);
+    const delta = EMPLOYEE_DEDUCTIONS.TIER_3_LIMIT - taxable;
+    const coefficiente = delta / EMPLOYEE_DEDUCTIONS.TIER_3_DIVISOR;
+    const valore = roundToTwoDecimals(EMPLOYEE_DEDUCTIONS.TIER_3_BASE * coefficiente);
 
     return {
       valore,
-      formulaApplicata: '1.910 € × ((50.000 - Imponibile) / 22.000)',
-      passaggiCalcolo: `1.910,00 € × ((50.000,00 € - ${formatCurrency(taxable)}) / 22.000) = ${formatCurrency(valore)}`,
+      formulaApplicata: '1.910 € × [ (50.000 € - Imponibile) / 22.000 ]',
+      passaggiCalcolo: `1) Quota residua dallo scaglione: 50.000,00 € - ${formatCurrency(taxable)} = ${formatCurrency(delta)}
+2) Rapporto di degressività: ${formatCurrency(delta)} / 22.000 = ${coefficiente.toFixed(4)}
+3) Detrazione totale spettante: 1.910,00 € × ${coefficiente.toFixed(4)} = ${formatCurrency(valore)}`,
       fonteNormativa: EMPLOYEE_DEDUCTIONS.FONTE_NORMATIVA,
     };
   }
@@ -163,8 +170,8 @@ export function calculateEmployeeDeductions(taxableIncome: number): CalculationS
   // Oltre 50.000 €
   return {
     valore: 0,
-    formulaApplicata: '0 € (Detrazione non spettante per redditi superiori a 50.000 €)',
-    passaggiCalcolo: `Imponibile ${formatCurrency(taxable)} > 50.000,00 € ➔ Detrazione applicata: 0,00 €`,
+    formulaApplicata: '0,00 € (La detrazione non spetta per redditi oltre 50.000 €)',
+    passaggiCalcolo: `Imponibile fiscale (${formatCurrency(taxable)}) > 50.000,00 €\n➔ Ai sensi dell'Art. 13 TUIR la detrazione da lavoro dipendente si azzera (0,00 €)`,
     fonteNormativa: EMPLOYEE_DEDUCTIONS.FONTE_NORMATIVA,
   };
 }

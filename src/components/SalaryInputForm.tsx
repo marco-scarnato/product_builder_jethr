@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Euro, Sparkles, Share2, Check } from 'lucide-react';
+import { Euro, Sparkles, Share2, Check, MapPin, Briefcase, Info } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 import { copyShareableLink } from '../utils/urlState';
@@ -87,40 +87,58 @@ export const SalaryInputForm: React.FC<SalaryInputFormProps> = ({
         className
       )}
     >
-      {/* Header minimale con pulsante Condividi */}
-      <div className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-5">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
-            Calcolatore Stipendio Netto
-          </h1>
-          <p className="text-sm font-medium text-neutral-500 mt-1">
-            Milano • Tempo Indeterminato
-          </p>
+      {/* Header con Badge Visivi e Postilla di Semplificazione */}
+      <div className="border-b border-neutral-100 pb-5 space-y-3.5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
+              Calcolatore Stipendio Netto
+            </h1>
+            {/* Badge in evidenza */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200/80 shadow-2xs">
+                <MapPin className="w-3.5 h-3.5 text-neutral-500" />
+                Milano (Lombardia)
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200/80 shadow-2xs">
+                <Briefcase className="w-3.5 h-3.5 text-neutral-500" />
+                Tempo Indeterminato
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            title="Copia link della simulazione negli appunti"
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0',
+              copied
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200 shadow-2xs'
+            )}
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600 animate-in fade-in" />
+                <span>Link Copiato!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-3.5 h-3.5 text-neutral-500" />
+                <span>Condividi</span>
+              </>
+            )}
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          title="Copia link della simulazione negli appunti"
-          className={cn(
-            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0',
-            copied
-              ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-              : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200 shadow-2xs'
-          )}
-        >
-          {copied ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-emerald-600 animate-in fade-in" />
-              <span>Link Copiato!</span>
-            </>
-          ) : (
-            <>
-              <Share2 className="w-3.5 h-3.5 text-neutral-500" />
-              <span>Condividi</span>
-            </>
-          )}
-        </button>
+        {/* Postilla esplicativa delle assunzioni per la semplificazione del calcolo */}
+        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-neutral-50 border border-neutral-200/80 text-xs text-neutral-600 leading-relaxed">
+          <Info className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+          <p>
+            <strong className="font-semibold text-neutral-800">Nota sulle assunzioni:</strong> per semplificare la simulazione e renderla immediata, il calcolo assume residenza fiscale nel <strong>Comune di Milano</strong> (addizionale regionale Lombardia + comunale Milano 0,80%) e un contratto a <strong>tempo indeterminato standard</strong> (aliquota IVS 9,19%, senza carichi familiari né detrazioni accessorie variabili).
+          </p>
+        </div>
       </div>
 
       {/* Input RAL Grande */}

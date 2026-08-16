@@ -82,10 +82,10 @@ export function getSalaryItemExplanations(breakdown: SalaryBreakdown): SalaryExp
 
     deductions: {
       title: 'Detrazioni da Lavoro Dipendente',
-      explanation: 'Detrazione teorica rapportata al reddito complessivo: riduzione dell’IRPEF lorda prevista dall’art. 13 del TUIR. L’importo della detrazione varia in base al reddito complessivo del contribuente e, in questa simulazione, si considera un rapporto di lavoro dipendente a tempo indeterminato iniziato il 1° gennaio e attivo per tutto l’anno; pertanto, la detrazione è considerata spettante per 365 giorni.',
-      reference: 'Art. 13, comma 1, TUIR — detrazione per redditi di lavoro dipendente.',
-      formula: details?.deductions?.formulaApplicata || 'Formula progressiva decrescente Art. 13 TUIR',
-      calculationSteps: details?.deductions?.passaggiCalcolo || `Detrazione applicata: ${formatCurrency(deductions)}`,
+      explanation: 'Sconto fiscale che riduce direttamente l’IRPEF lorda da pagare. L’importo è inversamente proporzionale all’imponibile fiscale: massimo (1.955 €) per redditi fino a 15.000 €, decresce progressivamente tra 15.000 € e 50.000 €, fino ad azzerarsi oltre 50.000 €. Si calcola su base annua (365 giorni di lavoro dipendente a tempo indeterminato).',
+      reference: 'Art. 13, comma 1, TUIR (D.P.R. 917/1986 e successive modificazioni).',
+      formula: details?.deductions?.formulaApplicata || 'Formula a scaglioni decrescenti Art. 13 TUIR',
+      calculationSteps: details?.deductions?.passaggiCalcolo || `Detrazione spettante: ${formatCurrency(deductions)}`,
       amount: deductions,
     },
 

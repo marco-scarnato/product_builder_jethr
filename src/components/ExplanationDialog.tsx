@@ -107,7 +107,7 @@ export const ExplanationDialog: React.FC<ExplanationDialogProps> = ({
 
               <div className="pt-1.5 border-t border-neutral-200/60">
                 <div className="text-[11px] font-bold text-neutral-600">Calcolo con i tuoi dati:</div>
-                <div className="font-mono text-xs text-neutral-800 mt-0.5">
+                <div className="font-mono text-xs text-neutral-800 mt-0.5 whitespace-pre-line leading-relaxed">
                   {item.calculationSteps}
                 </div>
               </div>
