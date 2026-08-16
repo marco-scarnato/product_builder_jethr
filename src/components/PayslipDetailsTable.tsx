@@ -1,34 +1,31 @@
-import React from 'react';
-import {
-  FileText,
-  PlusCircle,
-  MinusCircle,
-  Equal,
-  MapPin,
-  CheckCircle2,
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Info, FileText } from 'lucide-react';
 import type { SalaryBreakdown } from '../types/salary';
+import { getSalaryItemExplanations, type ItemExplanation } from '../core/explanations';
+import { ExplanationDialog } from './ExplanationDialog';
 import { cn } from '../utils/cn';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 
 export interface PayslipDetailsTableProps {
-  /** Risultato del calcolo dello stipendio */
+  /** Risultato completo del calcolo dello stipendio */
   breakdown: SalaryBreakdown;
-  /** Numero di mensilità (13 o 14) */
+  /** Numero di mensilità contrattuali (13 o 14) */
   monthlyCount: 13 | 14;
   /** Classe CSS opzionale */
   className?: string;
 }
 
-interface TableRowData {
+interface RowItem {
   id: string;
-  name: string;
-  category: 'base' | 'deduction' | 'credit' | 'subtotal' | 'final';
-  description: string;
-  rateInfo?: string;
-  annualAmount: number;
-  monthlyAmount: number;
-  isNegative?: boolean;
+  label: string;
+  rate?: string;
+  annual: number;
+  monthly: number;
+  isDeduction?: boolean;
+  isCredit?: boolean;
+  isSubtotal?: boolean;
+  isFinal?: boolean;
+  explanationKey?: keyof ReturnType<typeof getSalaryItemExplanations>;
 }
 
 export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
@@ -36,6 +33,11 @@ export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
   monthlyCount,
   className,
 }) => {
+  const [selectedExplanation, setSelectedExplanation] = useState<ItemExplanation | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+
+  const explanations = getSalaryItemExplanations(breakdown);
+
   const {
     ral,
     inpsEmployee,
@@ -49,237 +51,218 @@ export const PayslipDetailsTable: React.FC<PayslipDetailsTableProps> = ({
     netMonthly,
   } = breakdown;
 
-  const toMonthly = (annualVal: number) => annualVal / monthlyCount;
+  const toMonthly = (val: number) => (monthlyCount > 0 ? val / monthlyCount : 0);
 
-  const rows: TableRowData[] = [
+  const handleOpenInfo = (key?: keyof typeof explanations) => {
+    if (key && explanations[key]) {
+      setSelectedExplanation(explanations[key]);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const rows: RowItem[] = [
     {
       id: 'ral',
-      name: 'Retribuzione Annua Lorda (RAL)',
-      category: 'base',
-      description: 'Retribuzione contrattuale lorda pattuita',
-      rateInfo: '100% RAL',
-      annualAmount: ral,
-      monthlyAmount: toMonthly(ral),
-      isNegative: false,
+      label: 'Retribuzione Annua Lorda (RAL)',
+      rate: '100% RAL',
+      annual: ral,
+      monthly: toMonthly(ral),
     },
     {
       id: 'inps',
-      name: 'Contributi Previdenziali INPS (IVS)',
-      category: 'deduction',
-      description: 'Quota previdenziale standard a carico dipendente',
-      rateInfo: '9.19% (IVS)',
-      annualAmount: inpsEmployee,
-      monthlyAmount: toMonthly(inpsEmployee),
-      isNegative: true,
+      label: 'Contributi INPS Dipendente',
+      rate: '9,19%',
+      annual: inpsEmployee,
+      monthly: toMonthly(inpsEmployee),
+      isDeduction: true,
+      explanationKey: 'inpsEmployee',
     },
     {
       id: 'taxable',
-      name: 'Imponibile Fiscale (Base IRPEF)',
-      category: 'subtotal',
-      description: 'Reddito imponibile per le imposte (RAL - INPS)',
-      rateInfo: ral > 0 ? formatPercent((taxableIrpef / ral) * 100) : '0%',
-      annualAmount: taxableIrpef,
-      monthlyAmount: toMonthly(taxableIrpef),
-      isNegative: false,
+      label: 'Imponibile Fiscale (Base IRPEF)',
+      rate: ral > 0 ? formatPercent((taxableIrpef / ral) * 100) : '0%',
+      annual: taxableIrpef,
+      monthly: toMonthly(taxableIrpef),
+      isSubtotal: true,
+      explanationKey: 'taxableIrpef',
     },
     {
       id: 'gross-irpef',
-      name: 'IRPEF Lorda Calcolata',
-      category: 'subtotal',
-      description: 'Imposta teorica calcolata a 3 scaglioni progressivi',
-      rateInfo: '23% / 35% / 43%',
-      annualAmount: grossIrpef,
-      monthlyAmount: toMonthly(grossIrpef),
-      isNegative: false,
+      label: 'IRPEF Lorda',
+      rate: '23% / 33% / 43%',
+      annual: grossIrpef,
+      monthly: toMonthly(grossIrpef),
+      isSubtotal: true,
+      explanationKey: 'grossIrpef',
     },
     {
       id: 'deductions',
-      name: 'Detrazioni da Lavoro Dipendente',
-      category: 'credit',
-      description: 'Detrazione fiscale applicata (Art. 13 TUIR)',
-      rateInfo: 'Fino a 1.955 €',
-      annualAmount: deductions,
-      monthlyAmount: toMonthly(deductions),
-      isNegative: false,
+      label: 'Detrazioni Lavoro Dipendente',
+      rate: 'Art. 13 TUIR',
+      annual: deductions,
+      monthly: toMonthly(deductions),
+      isCredit: true,
+      explanationKey: 'deductions',
     },
     {
       id: 'net-irpef',
-      name: 'IRPEF Netta Trattenuta',
-      category: 'deduction',
-      description: 'Imposta netta effettiva trattenuta alla fonte (Lorda - Detrazioni)',
-      rateInfo: ral > 0 ? formatPercent((netIrpef / ral) * 100) : '0%',
-      annualAmount: netIrpef,
-      monthlyAmount: toMonthly(netIrpef),
-      isNegative: true,
+      label: 'IRPEF Netta Trattenuta',
+      rate: ral > 0 ? formatPercent((netIrpef / ral) * 100) : '0%',
+      annual: netIrpef,
+      monthly: toMonthly(netIrpef),
+      isDeduction: true,
+      explanationKey: 'netIrpef',
     },
     {
       id: 'regional',
-      name: 'Addizionale Regionale (Lombardia)',
-      category: 'deduction',
-      description: 'Addizionale progressiva Regione Lombardia',
-      rateInfo: '1.23% - 1.73%',
-      annualAmount: regionalTax,
-      monthlyAmount: toMonthly(regionalTax),
-      isNegative: true,
+      label: 'Addizionale Regionale (Lombardia)',
+      rate: '1,23% - 1,73%',
+      annual: regionalTax,
+      monthly: toMonthly(regionalTax),
+      isDeduction: true,
+      explanationKey: 'regionalTax',
     },
     {
       id: 'municipal',
-      name: 'Addizionale Comunale (Milano)',
-      category: 'deduction',
-      description: 'Addizionale Comune di Milano (esenzione sotto 23k€)',
-      rateInfo: '0.80%',
-      annualAmount: municipalTax,
-      monthlyAmount: toMonthly(municipalTax),
-      isNegative: true,
+      label: 'Addizionale Comunale (Milano)',
+      rate: '0,80%',
+      annual: municipalTax,
+      monthly: toMonthly(municipalTax),
+      isDeduction: true,
+      explanationKey: 'municipalTax',
     },
     {
       id: 'net-final',
-      name: 'Stipendio Netto Finale',
-      category: 'final',
-      description: `Importo netto realmente percepito (${monthlyCount} mensilità)`,
-      rateInfo: ral > 0 ? formatPercent((netAnnual / ral) * 100) : '0%',
-      annualAmount: netAnnual,
-      monthlyAmount: netMonthly,
-      isNegative: false,
+      label: 'Stipendio Netto Finale',
+      rate: ral > 0 ? formatPercent((netAnnual / ral) * 100) : '0%',
+      annual: netAnnual,
+      monthly: netMonthly,
+      isFinal: true,
+      explanationKey: 'netAnnual',
     },
   ];
 
   return (
-    <div
-      className={cn(
-        'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm transition-all overflow-hidden',
-        className
-      )}
-    >
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-slate-100 dark:border-slate-800/80">
-        <div className="flex items-center gap-2.5">
-          <span className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-            <FileText className="w-5 h-5" />
-          </span>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+    <>
+      <div
+        className={cn(
+          'bg-white border border-neutral-200 rounded-xl shadow-sm p-5 sm:p-6 space-y-4 overflow-hidden',
+          className
+        )}
+      >
+        {/* Header Tabella */}
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-neutral-500" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-700">
               Dettaglio Voci Busta Paga
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Analisi riga per riga di tutte le componenti dal lordo al netto.
-            </p>
+            </h2>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-            <MapPin className="w-3 h-3 text-blue-500" />
-            Milano
-          </span>
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+          <span className="text-xs font-semibold text-neutral-400">
             {monthlyCount} Mensilità
           </span>
         </div>
-      </div>
 
-      {/* Tabella Dettaglio */}
-      <div className="mt-6 -mx-6 sm:mx-0 overflow-x-auto">
-        <table className="w-full text-left text-sm border-collapse min-w-[600px] sm:min-w-full">
-          <thead>
-            <tr className="border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-800/50">
-              <th className="py-3.5 px-4 sm:px-6">Voce / Descrizione</th>
-              <th className="py-3.5 px-4 text-center">Aliquota / Riferimento</th>
-              <th className="py-3.5 px-4 text-right">Importo Annuo</th>
-              <th className="py-3.5 px-4 sm:px-6 text-right">Importo Mensile</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-            {rows.map((row) => {
-              const isFinal = row.category === 'final';
-              const isSubtotal = row.category === 'subtotal';
-              const isCredit = row.category === 'credit';
-              const isDeduction = row.category === 'deduction';
-              const isBase = row.category === 'base';
+        {/* Tabella Scannabile */}
+        <div className="-mx-5 sm:mx-0 overflow-x-auto">
+          <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[480px] sm:min-w-full">
+            <thead>
+              <tr className="border-b border-neutral-200 text-[11px] font-bold uppercase tracking-wider text-neutral-400 bg-neutral-50/50">
+                <th className="py-2.5 px-4">Voce</th>
+                <th className="py-2.5 px-3 text-right">Importo Annuo</th>
+                <th className="py-2.5 px-4 text-right">Importo Mensile</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {rows.map((row) => {
+                const isFinal = row.isFinal;
+                const isSubtotal = row.isSubtotal;
+                const isCredit = row.isCredit;
+                const isDeduction = row.isDeduction;
 
-              return (
-                <tr
-                  key={row.id}
-                  className={cn(
-                    'transition-colors',
-                    isFinal && 'bg-blue-50/80 dark:bg-blue-950/40 font-bold border-t-2 border-blue-500/30',
-                    isSubtotal && 'bg-slate-50/40 dark:bg-slate-800/30 text-slate-600 dark:text-slate-300 font-medium',
-                    !isFinal && !isSubtotal && 'hover:bg-slate-50/60 dark:hover:bg-slate-800/40'
-                  )}
-                >
-                  {/* Nome & Descrizione */}
-                  <td className="py-3.5 px-4 sm:px-6">
-                    <div className="flex items-center gap-2.5">
-                      {isBase && <span className="h-2 w-2 rounded-full bg-slate-400" />}
-                      {isDeduction && <MinusCircle className="w-4 h-4 text-rose-500 shrink-0" />}
-                      {isCredit && <PlusCircle className="w-4 h-4 text-emerald-500 shrink-0" />}
-                      {isSubtotal && <Equal className="w-4 h-4 text-slate-400 shrink-0" />}
-                      {isFinal && <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />}
-
-                      <div>
-                        <div
+                return (
+                  <tr
+                    key={row.id}
+                    className={cn(
+                      'transition-colors',
+                      isFinal && 'bg-emerald-50/90 font-bold border-t-2 border-emerald-300',
+                      isSubtotal && 'bg-neutral-50/70 text-neutral-600',
+                      !isFinal && !isSubtotal && 'hover:bg-neutral-50/80'
+                    )}
+                  >
+                    {/* Colonna Voce con Icona Info (i) */}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <span
                           className={cn(
-                            'text-sm',
-                            isFinal ? 'text-base font-extrabold text-blue-700 dark:text-blue-300' : 'font-semibold text-slate-900 dark:text-white'
+                            'text-xs sm:text-sm',
+                            isFinal && 'font-black text-emerald-900',
+                            isDeduction && 'font-medium text-neutral-800',
+                            isCredit && 'font-semibold text-emerald-800',
+                            isSubtotal && 'font-medium text-neutral-600',
+                            !isFinal && !isDeduction && !isCredit && !isSubtotal && 'font-bold text-neutral-900'
                           )}
                         >
-                          {row.name}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5">
-                          {row.description}
-                        </div>
+                          {row.label}
+                        </span>
+
+                        {row.explanationKey && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenInfo(row.explanationKey)}
+                            className="inline-flex items-center justify-center text-neutral-400 hover:text-neutral-900 p-0.5 rounded transition-colors"
+                            title={`Dettagli e normativa: ${row.label}`}
+                            aria-label={`Dettagli su ${row.label}`}
+                          >
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Riferimento / Aliquota */}
-                  <td className="py-3.5 px-4 text-center">
-                    <span
-                      className={cn(
-                        'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold',
-                        isFinal && 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold',
-                        isDeduction && 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400',
-                        isCredit && 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400',
-                        !isFinal && !isDeduction && !isCredit && 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                      )}
-                    >
-                      {row.rateInfo}
-                    </span>
-                  </td>
+                    {/* Colonna Annuale */}
+                    <td className="py-3 px-3 text-right font-medium">
+                      <span
+                        className={cn(
+                          isFinal && 'text-base font-black text-emerald-800',
+                          isDeduction && 'text-rose-600 font-semibold',
+                          isCredit && 'text-emerald-600 font-semibold',
+                          isSubtotal && 'text-neutral-600',
+                          !isFinal && !isDeduction && !isCredit && !isSubtotal && 'font-bold text-neutral-900'
+                        )}
+                      >
+                        {isDeduction ? `- ${formatCurrency(row.annual)}` : isCredit ? `+ ${formatCurrency(row.annual)}` : formatCurrency(row.annual)}
+                      </span>
+                    </td>
 
-                  {/* Importo Annuale */}
-                  <td className="py-3.5 px-4 text-right font-semibold">
-                    <span
-                      className={cn(
-                        isFinal && 'text-lg font-extrabold text-blue-700 dark:text-blue-300',
-                        isDeduction && 'text-rose-600 dark:text-rose-400',
-                        isCredit && 'text-emerald-600 dark:text-emerald-400',
-                        !isFinal && !isDeduction && !isCredit && 'text-slate-900 dark:text-white'
-                      )}
-                    >
-                      {row.isNegative ? `- ${formatCurrency(row.annualAmount)}` : formatCurrency(row.annualAmount)}
-                    </span>
-                  </td>
-
-                  {/* Importo Mensile */}
-                  <td className="py-3.5 px-4 sm:px-6 text-right font-semibold">
-                    <span
-                      className={cn(
-                        isFinal && 'text-lg font-extrabold text-blue-700 dark:text-blue-300',
-                        isDeduction && 'text-rose-600 dark:text-rose-400',
-                        isCredit && 'text-emerald-600 dark:text-emerald-400',
-                        !isFinal && !isDeduction && !isCredit && 'text-slate-900 dark:text-white'
-                      )}
-                    >
-                      {row.isNegative ? `- ${formatCurrency(row.monthlyAmount)}` : formatCurrency(row.monthlyAmount)}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    {/* Colonna Mensile */}
+                    <td className="py-3 px-4 text-right font-medium">
+                      <span
+                        className={cn(
+                          isFinal && 'text-base font-black text-emerald-800',
+                          isDeduction && 'text-rose-600 font-semibold',
+                          isCredit && 'text-emerald-600 font-semibold',
+                          isSubtotal && 'text-neutral-600',
+                          !isFinal && !isDeduction && !isCredit && !isSubtotal && 'font-bold text-neutral-900'
+                        )}
+                      >
+                        {isDeduction ? `- ${formatCurrency(row.monthly)}` : isCredit ? `+ ${formatCurrency(row.monthly)}` : formatCurrency(row.monthly)}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      {/* Dialog Modale Informativo Spiegazioni */}
+      <ExplanationDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        item={selectedExplanation}
+      />
+    </>
   );
 };

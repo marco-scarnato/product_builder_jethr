@@ -22,8 +22,8 @@ Il progetto è un simulatore/calcolatore di retribuzione netta annuale e mensile
 
 ### C. IRPEF Lorda (Scaglioni a 3 aliquote)
 1. **Fino a 28.000 €**: `23%`
-2. **Da 28.000,01 € a 50.000 €**: `35%`
-3. **Oltre 50.000 €**: `43%`
+2. **Da 28.000,01 € a 50.000 €**: `33%` (6.440 € + 33% sull'eccedenza di 28k)
+3. **Oltre 50.000 €**: `43%` (13.700 € + 43% sull'eccedenza di 50k)
 
 ---
 

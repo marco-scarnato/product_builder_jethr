@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Building2,
   ChevronDown,
   ChevronUp,
   Layers,
   PiggyBank,
   Shield,
   Briefcase,
-  TrendingUp,
+  Building2,
 } from 'lucide-react';
 import type { SalaryBreakdown } from '../types/salary';
 import { cn } from '../utils/cn';
@@ -44,140 +43,96 @@ export const CompanyCostCard: React.FC<CompanyCostCardProps> = ({
     {
       id: 'ral',
       title: 'Retribuzione Lorda (RAL)',
-      description: 'Lordo concordato nel contratto di lavoro',
-      rate: '100% RAL',
+      description: 'Lordo concordato',
+      rate: '100%',
       amount: ral,
       icon: Briefcase,
-      color: 'text-slate-700 dark:text-slate-300',
-      bg: 'bg-slate-100 dark:bg-slate-800',
     },
     {
       id: 'inps-employer',
-      title: 'Contributi INPS a carico Azienda',
-      description: 'Contributi previdenziali e assistenziali obbligatori ditta',
+      title: 'INPS a carico Azienda',
+      description: 'Contributi previdenziali ditta',
       rate: '~23.81%',
       amount: cost.inpsCompany,
       icon: Building2,
-      color: 'text-indigo-600 dark:text-indigo-400',
-      bg: 'bg-indigo-50 dark:bg-indigo-950/40',
     },
     {
       id: 'tfr',
       title: 'Quota TFR Maturata',
-      description: 'Trattamento di Fine Rapporto accantonato annualmente (RAL / 13.5)',
+      description: 'Trattamento di Fine Rapporto (RAL / 13.5)',
       rate: '~7.41%',
       amount: cost.tfr,
       icon: PiggyBank,
-      color: 'text-emerald-600 dark:text-emerald-400',
-      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
     },
     {
       id: 'inail',
-      title: 'Premio Assicurativo INAIL',
-      description: 'Assicurazione contro infortuni e malattie professionali sul lavoro',
+      title: 'Premio INAIL',
+      description: 'Assicurazione infortuni',
       rate: '~0.40%',
       amount: cost.inail,
       icon: Shield,
-      color: 'text-amber-600 dark:text-amber-400',
-      bg: 'bg-amber-50 dark:bg-amber-950/40',
     },
   ];
 
   return (
     <div
       className={cn(
-        'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm transition-all overflow-hidden',
+        'bg-white border border-neutral-200 rounded-xl shadow-sm p-5 sm:p-6 space-y-3',
         className
       )}
     >
-      {/* Header & Toggle Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <span className="p-2.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
-            <Layers className="w-6 h-6" />
-          </span>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                Costo Totale Aziendale (HR Perspective)
-              </h3>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
-                Azienda
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              Quanto spende realmente l'azienda includendo contributi ditta, TFR e assicurazioni.
-            </p>
-          </div>
+      {/* Header & Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-neutral-500" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-700">
+            Costo Totale Azienda
+          </h2>
         </div>
 
-        <div className="flex items-center gap-3 self-end sm:self-center">
+        <div className="flex items-center gap-3">
           <div className="text-right">
-            <span className="text-xs text-slate-400 dark:text-slate-500 block">Costo Annuo Stimato</span>
-            <span className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400">
+            <span className="text-sm sm:text-base font-black text-neutral-900">
               {formatCurrency(cost.totalCompanyCost)}
+            </span>
+            <span className="text-[11px] text-neutral-500 block">
+              +{formatPercent(extraPercentage)} vs RAL
             </span>
           </div>
 
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-            title={isExpanded ? 'Comprimi dettaglio' : 'Espandi dettaglio'}
+            className="p-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-100 text-neutral-600 transition-colors"
+            title={isExpanded ? 'Comprimi' : 'Espandi'}
           >
-            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
       {/* Sezione Espandibile */}
       {isExpanded && (
-        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80 space-y-4 animate-in fade-in duration-200">
-          {/* Banner Moltiplicatore Aziendale */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-indigo-50/80 dark:from-indigo-950/40 dark:via-slate-900 dark:to-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-              <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
-                L'azienda sostiene un costo superiore di circa{' '}
-                <strong className="text-indigo-600 dark:text-indigo-400 font-bold">
-                  +{formatPercent(extraPercentage)} ({formatCurrency(extraCost)})
-                </strong>{' '}
-                rispetto alla RAL concordata.
-              </span>
-            </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-2xs self-start sm:self-auto shrink-0">
-              Moltiplicatore ~1.32x
-            </span>
-          </div>
-
-          {/* Griglia Dettaglio Voci Costo Azienda */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <div className="pt-3 border-t border-neutral-100 space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {costItems.map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.id}
-                  className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex items-start gap-3"
+                  className="p-3 rounded-lg bg-neutral-50 border border-neutral-100 flex items-center justify-between gap-2"
                 >
-                  <span className={cn('p-2 rounded-xl shrink-0', item.bg, item.color)}>
-                    <Icon className="w-4 h-4" />
-                  </span>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Icon className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-neutral-800 truncate">
                         {item.title}
-                      </span>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 shadow-2xs">
-                        {item.rate}
-                      </span>
+                      </div>
+                      <div className="text-[10px] text-neutral-500">{item.rate}</div>
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
-                      {item.description}
-                    </p>
-                    <div className="text-base font-extrabold text-slate-900 dark:text-white mt-1.5">
-                      {formatCurrency(item.amount)}
-                    </div>
+                  </div>
+                  <div className="text-xs font-bold text-neutral-900 shrink-0">
+                    {formatCurrency(item.amount)}
                   </div>
                 </div>
               );

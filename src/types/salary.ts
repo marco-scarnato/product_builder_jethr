@@ -30,10 +30,40 @@ export interface CompanyCostBreakdown {
   totalCompanyCost: number;
 }
 
+/**
+ * Singola voce di calcolo arricchita con trasparenza normativa e formule.
+ */
+export interface CalculationStepDetail {
+  /** Importo numerico calcolato (arrotondato a due decimali) */
+  valore: number;
+  /** Formula matematica o logica teorica applicata */
+  formulaApplicata: string;
+  /** Passaggi analitici espliciti con i valori reali inseriti */
+  passaggiCalcolo: string;
+  /** Riferimento normativo o articolo di legge applicato */
+  fonteNormativa: string;
+}
+
+/**
+ * Mappa completa dei passaggi di calcolo trasparente.
+ */
+export interface SalaryCalculationDetails {
+  inpsEmployee: CalculationStepDetail;
+  taxableIrpef: CalculationStepDetail;
+  grossIrpef: CalculationStepDetail;
+  deductions: CalculationStepDetail;
+  netIrpef: CalculationStepDetail;
+  regionalTax: CalculationStepDetail;
+  municipalTax: CalculationStepDetail;
+  totalTaxes: CalculationStepDetail;
+  netAnnual: CalculationStepDetail;
+  netMonthly: CalculationStepDetail;
+}
+
 export interface SalaryBreakdown {
   /** Retribuzione Annua Lorda di partenza */
   ral: number;
-  /** Contributi previdenziali INPS a carico dipendente (IVS 9.19% + eventuale 1% eccedenza) */
+  /** Contributi previdenziali INPS a carico dipendente (IVS 9.19%) */
   inpsEmployee: number;
   /** Imponibile Fiscale su cui si calcolano IRPEF e Addizionali (RAL - INPS) */
   taxableIrpef: number;
@@ -57,4 +87,6 @@ export interface SalaryBreakdown {
   effectiveTaxRate: number;
   /** Dettaglio e stima del costo complessivo per l'azienda (TFR + INPS ditta) */
   companyCost?: CompanyCostBreakdown;
+  /** Dettaglio trasparente con formule, passaggi e fonti per ogni singola voce */
+  details: SalaryCalculationDetails;
 }

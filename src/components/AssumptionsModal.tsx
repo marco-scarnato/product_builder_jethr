@@ -72,7 +72,7 @@ export const AssumptionsModal: React.FC<AssumptionsModalProps> = ({ isOpen, onCl
       icon: Scale,
       badge: 'Art. 13 TUIR',
       description:
-        'Calcolo IRPEF progressivo a 3 scaglioni (23% fino a 28k€, 35% tra 28k€ e 50k€, 43% oltre 50k€) con formule esatte delle detrazioni fiscali da lavoro dipendente decrescenti.',
+        'Calcolo IRPEF progressivo a 3 scaglioni (23% fino a 28k€, 33% tra 28k€ e 50k€, 43% oltre 50k€) con formule esatte delle detrazioni fiscali da lavoro dipendente decrescenti.',
     },
     {
       id: 'exclusions',
