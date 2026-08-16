@@ -1,11 +1,12 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import type { SalaryBreakdown, SalaryInput } from '../types/salary';
 import { calculateSalary } from '../core/engine';
+import { getSalaryStateFromUrl, syncSalaryStateToUrl } from '../utils/urlState';
 
 export interface UseSalaryCalculatorOptions {
-  /** Valore RAL iniziale in Euro (default: 35.000 €) */
+  /** Valore RAL iniziale in Euro (default: 35.000 € o da URL) */
   initialRal?: number;
-  /** Numero iniziale di mensilità (default: 13) */
+  /** Numero iniziale di mensilità (default: 13 o da URL) */
   initialMonthlyCount?: 13 | 14;
   /** Regime speciale iniziale (default: false) */
   initialHasSpecialRegime?: boolean;
@@ -66,7 +67,8 @@ export function parseRalInput(raw: string | number): number {
 }
 
 /**
- * Custom hook per la gestione dello stato reattivo e del calcolo dello stipendio netto.
+ * Custom hook per la gestione dello stato reattivo e del calcolo dello stipendio netto,
+ * con sincronizzazione automatica dei parametri nell'URL (?ral=45000&mensilita=13).
  */
 export function useSalaryCalculator(options: UseSalaryCalculatorOptions = {}): UseSalaryCalculatorReturn {
   const {
@@ -75,9 +77,45 @@ export function useSalaryCalculator(options: UseSalaryCalculatorOptions = {}): U
     initialHasSpecialRegime = false,
   } = options;
 
-  const [ral, setRalState] = useState<number>(() => parseRalInput(initialRal));
-  const [monthlyCount, setMonthlyCount] = useState<13 | 14>(initialMonthlyCount === 14 ? 14 : 13);
+  // Inizializza lo stato leggendo prima dai query params dell'URL (zero-flicker)
+  const [ral, setRalState] = useState<number>(() => {
+    const urlState = getSalaryStateFromUrl();
+    if (urlState.ral !== undefined) {
+      return parseRalInput(urlState.ral);
+    }
+    return parseRalInput(initialRal);
+  });
+
+  const [monthlyCount, setMonthlyCount] = useState<13 | 14>(() => {
+    const urlState = getSalaryStateFromUrl();
+    if (urlState.monthlyCount !== undefined) {
+      return urlState.monthlyCount;
+    }
+    return initialMonthlyCount === 14 ? 14 : 13;
+  });
+
   const [hasSpecialRegime, setHasSpecialRegime] = useState<boolean>(initialHasSpecialRegime);
+
+  // Sincronizza lo stato con l'URL ad ogni modifica tramite window.history.replaceState
+  useEffect(() => {
+    syncSalaryStateToUrl({ ral, monthlyCount });
+  }, [ral, monthlyCount]);
+
+  // Ascolta gli eventi popstate per supportare la cronologia del browser (Avanti/Indietro)
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlState = getSalaryStateFromUrl();
+      if (urlState.ral !== undefined) {
+        setRalState(urlState.ral);
+      }
+      if (urlState.monthlyCount !== undefined) {
+        setMonthlyCount(urlState.monthlyCount);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Aggiornamento sicuro della RAL
   const setRal = useCallback((value: number) => {

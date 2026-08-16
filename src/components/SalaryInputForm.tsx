@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Euro, Sparkles } from 'lucide-react';
+import { Euro, Sparkles, Share2, Check } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { formatCurrency, formatNumber } from '../utils/formatters';
+import { copyShareableLink } from '../utils/urlState';
 
 export interface SalaryInputFormProps {
   /** Valore corrente della RAL in Euro */
@@ -33,12 +34,21 @@ export const SalaryInputForm: React.FC<SalaryInputFormProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState<string>(() => (ral > 0 ? String(ral) : ''));
   const [isFocused, setIsFocused] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isFocused) {
       setInputValue(ral > 0 ? formatNumber(ral) : '');
     }
   }, [ral, isFocused]);
+
+  const handleCopyLink = async () => {
+    const success = await copyShareableLink();
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -77,14 +87,40 @@ export const SalaryInputForm: React.FC<SalaryInputFormProps> = ({
         className
       )}
     >
-      {/* Header minimale */}
-      <div className="border-b border-neutral-100 pb-5">
-        <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
-          Calcolatore Stipendio Netto
-        </h1>
-        <p className="text-sm font-medium text-neutral-500 mt-1">
-          Milano • Tempo Indeterminato
-        </p>
+      {/* Header minimale con pulsante Condividi */}
+      <div className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-5">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
+            Calcolatore Stipendio Netto
+          </h1>
+          <p className="text-sm font-medium text-neutral-500 mt-1">
+            Milano • Tempo Indeterminato
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          title="Copia link della simulazione negli appunti"
+          className={cn(
+            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0',
+            copied
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+              : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200 shadow-2xs'
+          )}
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-600 animate-in fade-in" />
+              <span>Link Copiato!</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="w-3.5 h-3.5 text-neutral-500" />
+              <span>Condividi</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Input RAL Grande */}
